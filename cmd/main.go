@@ -3,10 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
+	"goworkerpool/internal/queue"
 	"goworkerpool/internal/task"
+	"goworkerpool/internal/worker"
+	"sync"
+	"time"
 )
 
 func main() {
+	var wg sync.WaitGroup
+
 	fmt.Println("hello")
 
 	t1 := "http_get:https://go.dev"
@@ -17,10 +23,25 @@ func main() {
 	task2, _ := tp.ParseTask(t2)
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, "helo", "helo")
+	ctx, cancelCtx := context.WithDeadline(ctx, time.Now().Add(30*time.Second))
 
 	fmt.Println(task1)
-	task1.Execute(ctx)
 	fmt.Println(task2)
-	task2.Execute(ctx)
+
+	tq := queue.NewQueue()
+	tq.AddNewTask(ctx, task1)
+	tq.AddNewTask(ctx, task2)
+
+	n := 5
+
+	for i := range n {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			worker.StartWorker(i, tq.Tasks, ctx)
+		}()
+	}
+
+	wg.Wait()
+	cancelCtx()
 }

@@ -22,13 +22,31 @@ func (h *HttpGetTask) Name() string {
 }
 
 func (h *HttpGetTask) Execute(ctx context.Context) error {
-	res, err := http.Get(h.Url)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, h.Url, nil)
 	if err != nil {
-		fmt.Printf("Failed to send Get request to %s\n%v", h.Url, err)
 		return err
 	}
 
-	fmt.Println("Succesfully send Get request to", h.Url)
-	fmt.Println(res)
-	return nil
+	resCh := make(chan *http.Response, 1)
+	errCh := make(chan error, 1)
+	go func() {
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			errCh <- err
+			return
+		}
+		resCh <- res
+	}()
+
+	select {
+	case <-ctx.Done():
+		fmt.Println("timed out")
+		return ctx.Err()
+	case err := <-errCh:
+		return err
+	case res := <-resCh:
+		defer res.Body.Close()
+		fmt.Println(res)
+		return nil
+	}
 }

@@ -3,6 +3,7 @@ package task
 import (
 	"context"
 	"fmt"
+	"time"
 )
 
 type ComputeTask struct {
@@ -23,13 +24,16 @@ func (c *ComputeTask) Name() string {
 }
 
 func (c *ComputeTask) Execute(ctx context.Context) error {
-	if c.Type == "factorial" {
-		res := 1
-		for i := range c.Operand {
-			res *= (i + 1)
+	res := 1
+	for i := 2; i <= c.Operand; i++ {
+		select {
+		case <-ctx.Done():
+			fmt.Println("timed out")
+			return ctx.Err()
+		case <-time.After(25 * time.Millisecond):
+			res *= i
 		}
-		fmt.Println(res)
-		return nil
 	}
-	return fmt.Errorf("failed to compute")
+	fmt.Println(res)
+	return nil
 }

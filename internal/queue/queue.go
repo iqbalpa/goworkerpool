@@ -6,17 +6,16 @@ import (
 )
 
 type TaskQueue struct {
-	tasks chan pkg.Task
+	Tasks chan pkg.Task
 }
 
 func NewQueue() *TaskQueue {
 	return &TaskQueue{
-		tasks: make(chan pkg.Task),
+		Tasks: make(chan pkg.Task, 10),
 	}
 }
 
-func (tq *TaskQueue) AddNewTask(ctx context.Context) error {
-	var task pkg.Task = ctx.Value("task").(pkg.Task)
-	tq.tasks <- task
+func (tq *TaskQueue) AddNewTask(ctx context.Context, task pkg.Task) error {
+	tq.Tasks <- task
 	return nil
 }
