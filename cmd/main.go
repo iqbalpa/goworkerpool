@@ -23,7 +23,7 @@ func main() {
 	task2, _ := tp.ParseTask(t2)
 
 	ctx := context.Background()
-	ctx, cancelCtx := context.WithDeadline(ctx, time.Now().Add(30*time.Second))
+	ctx, cancelCtx := context.WithTimeout(ctx, 10*time.Second)
 
 	fmt.Println(task1)
 	fmt.Println(task2)
@@ -43,5 +43,6 @@ func main() {
 	}
 
 	wg.Wait()
+	fmt.Println("Cancelling the context...")
 	cancelCtx()
 }
