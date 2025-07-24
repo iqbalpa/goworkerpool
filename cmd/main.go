@@ -28,7 +28,7 @@ func main() {
 	fmt.Println(task1)
 	fmt.Println(task2)
 
-	tq := queue.NewQueue()
+	tq := queue.NewQueue(10)
 	tq.AddNewTask(ctx, task1)
 	tq.AddNewTask(ctx, task2)
 
