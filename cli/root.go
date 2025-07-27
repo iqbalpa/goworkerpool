@@ -22,7 +22,7 @@ var (
 
 // Flags
 var (
-	taskStr   string
+	taskStrs  []string
 	workerInt int
 )
 
@@ -54,8 +54,10 @@ var (
 			initServices()
 			ctx := context.Background()
 			ctx, cancelCtx := context.WithTimeout(ctx, 3*time.Second)
-			t, _ := taskParser.ParseTask(taskStr)
-			taskQueue.AddNewTask(ctx, t)
+			for _, taskStr := range taskStrs {
+				t, _ := taskParser.ParseTask(taskStr)
+				taskQueue.AddNewTask(ctx, t)
+			}
 			for i := 0; i < workerInt; i++ {
 				wg.Add(1)
 				go func(id int) {
@@ -75,8 +77,8 @@ func Execute() error {
 }
 
 func init() {
-	addCmd.PersistentFlags().StringVarP(&taskStr, "task", "t", "", "task in string format")
 	addCmd.PersistentFlags().IntVarP(&workerInt, "worker", "w", 1, "the number of worker")
+	addCmd.PersistentFlags().StringSliceVarP(&taskStrs, "task", "t", []string{}, "task in string format")
 
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(addCmd)
