@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"goworkerpool/pkg"
-	"time"
 )
 
 func StartWorker(id int, queue <-chan pkg.Task, ctx context.Context) {
@@ -20,7 +19,6 @@ func StartWorker(id int, queue <-chan pkg.Task, ctx context.Context) {
 			if !ok {
 				return
 			}
-			ctx, _ = context.WithTimeout(ctx, 5*time.Second)
 			t.Execute(ctx)
 		}
 	}
