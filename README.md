@@ -1,6 +1,6 @@
 # Go Worker Pool
 
-A concurrent task processing system built in Go that implements a worker pool pattern for executing various types of tasks efficiently.
+A concurrent task processing system built in Go that implements a worker pool pattern for executing various types of tasks efficiently. This project is a command-line interface (CLI) application.
 
 ## Features
 
@@ -9,6 +9,7 @@ A concurrent task processing system built in Go that implements a worker pool pa
 - **Multiple Task Types**: Supports HTTP requests and computational tasks
 - **Context-based Cancellation**: Proper timeout and cancellation handling
 - **Extensible Design**: Easy to add new task types through interface implementation
+- **CLI Interface**: Simple and easy to use CLI to run the worker
 
 ## Architecture
 
@@ -63,69 +64,30 @@ go mod tidy
 
 ### Basic Example
 
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-    "goworkerpool/internal/queue"
-    "goworkerpool/internal/task"
-    "goworkerpool/internal/worker"
-    "sync"
-    "time"
-)
-
-func main() {
-    var wg sync.WaitGroup
-
-    // Create tasks
-    t1 := "http_get:https://go.dev"
-    t2 := "compute:factorial:25"
-
-    // Parse tasks
-    tp := task.NewTaskParser()
-    task1, _ := tp.ParseTask(t1)
-    task2, _ := tp.ParseTask(t2)
-
-    // Set up context with timeout
-    ctx := context.Background()
-    ctx, cancelCtx := context.WithTimeout(ctx, 10*time.Second)
-    defer cancelCtx()
-
-    // Create task queue and add tasks
-    tq := queue.NewQueue(10)
-    tq.AddNewTask(ctx, task1)
-    tq.AddNewTask(ctx, task2)
-
-    // Start worker pool
-    numWorkers := 5
-    for i := range numWorkers {
-        wg.Add(1)
-        go func() {
-            defer wg.Done()
-            worker.StartWorker(i, tq.Tasks, ctx)
-        }()
-    }
-
-    wg.Wait()
-}
-```
-
-### Running the Application
-
 ```bash
 # Build the application
 go build -o tmp/main cmd/main.go
 
 # Run the application
-./tmp/main
+./tmp/main add -w 5 -t "http_get:https://go.dev" -t "compute:factorial:25"
 ```
 
 Or run directly:
 ```bash
-go run cmd/main.go
+go run cmd/main.go add -w 5 -t "http_get:https://go.dev" -t "compute:factorial:25"
 ```
+
+### CLI Commands
+
+#### `add`
+Add new task to the worker.
+
+**Flags**:
+- `-w`, `--worker`: The number of worker (default: 1)
+- `-t`, `--task`: Task in string format
+
+#### `version`
+Print the version number of Goworkerpool.
 
 ## Adding New Task Types
 
@@ -171,7 +133,7 @@ case "sleep":
 ## Configuration
 
 ### Worker Pool Size
-Adjust the number of workers by modifying the `numWorkers` variable in `main.go`.
+Adjust the number of workers by modifying the `-w` or `--worker` flag.
 
 ### Queue Size
 Change the queue buffer size by modifying the parameter in `queue.NewQueue(size)`.
@@ -189,7 +151,7 @@ Modify the context timeout in `main.go` or individual task timeouts in the worke
 ## Dependencies
 
 - Go 1.24.4 or later
-- Standard library only (no external dependencies)
+- [github.com/spf13/cobra](https://github.com/spf13/cobra)
 
 ## Error Handling
 
@@ -223,4 +185,3 @@ The system includes comprehensive error handling:
 - [ ] Configuration file support
 - [ ] More task types (file operations, database operations, etc.)
 - [ ] Graceful shutdown with task completion
-- [ ] CLI 
